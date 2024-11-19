@@ -48,18 +48,43 @@ class Game:
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self):
+    """A class to model a spaceship the user can controll"""
+
+    def __init__(self, bullet_group):
+        """Initialize the player"""
         super().__init__()
-        pass
+        self.image = pygame.image.load("player_ship.png")
+        self.rect = self.image.get_rect()
+        self.rect.centerx = WINDOW_WIDTH // 2
+        self.rect.bottom = WINDOW_HEIGHT
+
+        self.lives = 5
+        self.velocity = 8
+
+        self.bullet_group = bullet_group
+
+        self.shoot_sound = pygame.mixer.Sound("player_fire.wav")
 
     def update(self):
-        pass
+        """Update the player"""
+        keys = pygame.key.get_pressed()
+
+        # Move the player within the bounds of the screen
+        if keys[pygame.K_LEFT] and self.rect.left > 0:
+            self.rect.x -= self.velocity
+        if keys[pygame.K_RIGHT] and self.rect.right < WINDOW_WIDTH:
+            self.rect.x += self.velocity
 
     def fire(self):
-        pass
+        """Fire a bullet"""
+        # Restrict the number of bullets on screen at a time
+        if len(self.bullet_group) < 2:
+            self.shoot_sound.play()
+            PlayerBullet(self.rect.centerx, self.rect.top, self.bullet_group)
 
     def reset(self):
-        pass
+        """Reset the players position"""
+        self.rect.centerx = WINDOW_WIDTH // 2
 
 
 class Alien(pygame.sprite.Sprite):
@@ -78,12 +103,26 @@ class Alien(pygame.sprite.Sprite):
 
 
 class PlayerBullet(pygame.sprite.Sprite):
-    def __init__(self):
+    """A class to model a bullet fired by the player"""
+
+    def __init__(self, x, y, bullet_group):
+        """Initialize the bullet"""
         super().__init__()
-        pass
+        self.image = pygame.image.load("green_laser.png")
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.centery = y
+
+        self.velocity = 10
+        bullet_group.add(self)
 
     def update(self):
-        pass
+        """Update the bullet"""
+        self.rect.y -= self.velocity
+
+        # If the bullet is off the screen, kill it
+        if self.rect.bottom < 0:
+            self.kill()
 
 
 class AlienBullet(pygame.sprite.Sprite):
@@ -104,17 +143,41 @@ my_player_group.add(my_player)
 
 my_alien_group = pygame.sprite.Group()
 
-
+my_game = Game()
 
 # Main game loop
 running = True
 while running:
-    # Event handling
+    #Check to see if the user wants to quit
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        #The player wants to fire
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                my_player.fire()
 
-    # Update the display
+    #Fill the display
+    display_surface.fill((0, 0, 0))
+
+    #Update and display all sprite groups
+    my_player_group.update()
+    my_player_group.draw(display_surface)
+
+    my_alien_group.update()
+    my_alien_group.draw(display_surface)
+
+    my_player_bullet_group.update()
+    my_player_bullet_group.draw(display_surface)
+
+    my_alien_bullet_group.update()
+    my_alien_bullet_group.draw(display_surface)
+
+    #Update and draw Game object
+    my_game.update()
+    my_game.draw()
+
+    #Update the display and tick clock
     pygame.display.update()
     clock.tick(FPS)
 
