@@ -17,7 +17,7 @@ clock = pygame.time.Clock()
 
 class Game:
     def __init__(self, player, alien_group, player_bullet_group, alien_bullet_group):
-        self.round_number = 8
+        self.round_number = 1
         self.score = 0
 
         self.player = player
@@ -85,7 +85,16 @@ class Game:
                 self.check_game_status("Aliens breached the defense!", "Press Enter to continue")
 
     def check_collision(self):
-        pass
+        if pygame.sprite.groupcollide(self.player_bullet_group, self.alien_group, True, True):
+            self.alien_hit_sound.play()
+            self.score += 100
+
+        if pygame.sprite.spritecollide(self.player, self.alien_bullet_group, True):
+            self.player_hit_sound.play()
+            self.player.lives -= 1
+            self.check_game_status("Player hit!", "Press Enter to continue")
+
+
 
     def start_new_round(self):
         for i in range(11):
@@ -97,7 +106,10 @@ class Game:
         self.pause_game(f"Round {self.round_number}", "Press Enter to start")
 
     def check_round_completion(self):
-        pass
+        if not self.alien_group:
+            self.round_number += 1
+            self.score += 1000 * self.round_number
+            self.start_new_round()
 
     def check_game_status(self, main_text, sub_text):
         self.alien_bullet_group.empty()
@@ -141,7 +153,16 @@ class Game:
                         is_paused = False
 
     def reset_game(self):
-        pass
+        self.pause_game("Final Score: " + str(self.score), "Press Enter to play again")
+        self.round_number = 1
+        self.score = 0
+        self.player.lives = 5
+
+        self.alien_group.empty()
+        self.alien_bullet_group.empty()
+        self.player_bullet_group.empty()
+
+        self.start_new_round()
 
 
 class Player(pygame.sprite.Sprite):
