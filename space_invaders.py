@@ -17,7 +17,7 @@ clock = pygame.time.Clock()
 
 class Game:
     def __init__(self, player, alien_group, player_bullet_group, alien_bullet_group):
-        self.round_number = 1
+        self.round_number = 8
         self.score = 0
 
         self.player = player
@@ -53,7 +53,7 @@ class Game:
         lives_rect = lives_text.get_rect()
         lives_rect.topright = (WINDOW_WIDTH - 20, 10)
 
-        #Blit HUD
+        # Blit HUD
         display_surface.blit(score_text, score_rect)
         display_surface.blit(round_text, round_rect)
         display_surface.blit(lives_text, lives_rect)
@@ -66,7 +66,7 @@ class Game:
         for alien in self.alien_group.sprites():
             if alien.rect.right >= WINDOW_WIDTH or alien.rect.left <= 0:
                 shift = True
-                #maybe bug
+                # maybe bug
                 break
 
         if shift:
@@ -82,8 +82,7 @@ class Game:
             if breach:
                 self.breach_sound.play()
                 self.player.lives -= 1
-                self.check_game_status()
-
+                self.check_game_status("Aliens breached the defense!", "Press Enter to continue")
 
     def check_collision(self):
         pass
@@ -95,16 +94,51 @@ class Game:
                 self.alien_group.add(alien)
 
         self.new_round_sound.play()
-        self.pause_game()
+        self.pause_game(f"Round {self.round_number}", "Press Enter to start")
 
     def check_round_completion(self):
         pass
 
-    def check_game_status(self):
-        pass
+    def check_game_status(self, main_text, sub_text):
+        self.alien_bullet_group.empty()
+        self.player_bullet_group.empty()
+        self.player.reset()
+        for alien in self.alien_group:
+            alien.reset()
 
-    def pause_game(self):
-        pass
+        if self.player.lives <= 0:
+            self.reset_game()
+        else:
+            self.pause_game(main_text, sub_text)
+
+    def pause_game(self, main_text, sub_text):
+        global running
+
+        WHITE = (255, 255, 255)
+        BLACK = (0, 0, 0)
+
+        main_text = self.font.render(main_text, True, WHITE)
+        main_rect = main_text.get_rect()
+        main_rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
+
+        sub_text = self.font.render(sub_text, True, WHITE)
+        sub_rect = sub_text.get_rect()
+        sub_rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + 64)
+
+        display_surface.fill(BLACK)
+        display_surface.blit(main_text, main_rect)
+        display_surface.blit(sub_text, sub_rect)
+        pygame.display.update()
+
+        is_paused = True
+        while is_paused:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        is_paused = False
 
     def reset_game(self):
         pass
